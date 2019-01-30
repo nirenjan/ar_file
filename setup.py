@@ -13,7 +13,7 @@ setuptools.setup(
     url="https://github.com/nirenjan/ar_file",
     packages=setuptools.find_packages(),
     classifiers=[
-      "Programming Language :: Python",
+      "Programming Language :: Python :: 3",
       "License :: OSI Approved :: GNU Lesser General Public License v2 (LGPLv2)",
       "Operating System :: OS Independent"
     ]
