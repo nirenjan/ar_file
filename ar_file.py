@@ -11,8 +11,8 @@
 #######################################################################
 
 # Formats that ar_file supports
-GNU_FORMAT = 1  # GNU format, using / in filenames
-BSD_FORMAT = 2  # BSD format, using #1/ for extended filenames
+GNU_FORMAT = 1  # GNU format, using /<n> for extended filenames
+BSD_FORMAT = 2  # BSD format, using #1/<n> for extended filenames
 
 DEFAULT_FORMAT = GNU_FORMAT
 
@@ -81,7 +81,7 @@ class ArInfo():
         return EncodingError(f"Invalid format {format}")
 
     @classmethod
-    def frombuf(cls, buf, parent=None, encoding=ENCODING, errors='strict'):
+    def frombuf(cls, buf, arfile=None, encoding=ENCODING, errors='strict'):
         """Create an ArInfo object from the string representation"""
         if not isinstance(buf, bytes):
             raise HeaderError("Invalid type of buf - expected bytes")
@@ -118,6 +118,39 @@ class ArInfo():
         info_obj.gid = gid
         info_obj.mode = mode
         info_obj.size = size
+
+        # Set the pointer to the parent ArFile
+        info_obj._parent = arfile
+
+        # Parse the filename format
+        special = name.startswith('/') or name.startswith('#1/')
+        if special:
+            info_obj._inline_filename = name.startswith('#1/')
+
+        if special and info_obj._inline_filename:
+            # BSD Format
+            try:
+                length = int(name[3:], 10)
+            except ValueError:
+                raise HeaderError(f"Invalid filename {name}")
+
+            if len(buf) >= (60 + length):
+                # We have enough data to get the filename
+                info_obj.name = buf[60:60+length]
+
+        if special and not info_obj._inline_filename:
+            # GNU Format
+            try:
+                offset = int(name[1:], 10)
+            except ValueError:
+                raise HeaderError(f"Invalid filename {name}")
+
+            if arfile is None:
+                raise HeaderError(
+                        f"Unable to convert filename {name}, need ArFile")
+
+            # Get the filename from the ArFile object
+            info_obj.name = arfile.read_filename(offset)
 
     def _append_common_data(self):
         text = ''
