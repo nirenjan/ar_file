@@ -5,7 +5,7 @@ with open("README.rst", "r") as fp:
 
 setuptools.setup(
     name="ar_file",
-    version="0.0.1",
+    version="0.0.2",
     author="Nirenjan Krishnan",
     author_email="nirenjan@gmail.com",
     description="Unix archive file library",
